@@ -1,0 +1,67 @@
+<div class="sidebar-header">
+  <h1>PostMeme</h1>
+</div>
+
+<div class="sidebar-actions">
+  <details>
+    <summary>＋ New collection</summary>
+    <form action="<%= collections_path %>" method="post" class="inline-form">
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+      <input type="text" name="collection[name]" placeholder="Collection name" required autofocus>
+      <button type="submit">Create</button>
+    </form>
+  </details>
+</div>
+
+<% if @collections.present? %>
+  <div class="collection-tree">
+    <% @collections.each do |collection| %>
+      <div class="collection">
+        <div class="collection-row">
+          <span class="collection-name" title="<%= collection.name %>"><%= collection.name %></span>
+          <span class="collection-count"><%= collection.api_requests.size %></span>
+          <details class="mini-actions">
+            <summary>⋯</summary>
+            <div class="mini-menu">
+              <%= button_to "Delete collection", collection_path(collection), method: :delete, data: { turbo_confirm: "Delete this collection and everything in it?" }, class: "danger-link" %>
+            </div>
+          </details>
+        </div>
+
+        <!-- Requests at the collection root -->
+        <% collection.api_requests.where(folder_id: nil).order(:name).each do |req| %>
+          <%= link_to edit_api_request_path(req), class: "request-link #{'active' if defined?(@api_request) && @api_request&.id == req.id}" do %>
+            <span class="method method-<%= req.method.downcase %>"><%= req.method %></span>
+            <span class="req-name"><%= req.name %></span>
+          <% end %>
+        <% end %>
+
+        <% collection.folders.order(:name).each do |folder| %>
+          <details class="folder" <%= "open" if defined?(@api_request) && @api_request&.folder_id == folder.id %>>
+            <summary>
+              <span class="folder-name">📁 <%= folder.name %></span>
+              <span class="mini-actions">
+                <span class="mini-label"><%= folder.api_requests.size %></span>
+              </span>
+            </summary>
+            <div class="folder-body">
+              <% folder.api_requests.order(:name).each do |req| %>
+                <%= link_to edit_api_request_path(req), class: "request-link #{'active' if defined?(@api_request) && @api_request&.id == req.id}" do %>
+                  <span class="method method-<%= req.method.downcase %>"><%= req.method %></span>
+                  <span class="req-name"><%= req.name %></span>
+                <% end %>
+              <% end %>
+              <%= link_to "＋ New request", new_api_request_path(collection_id: collection.id, folder_id: folder.id), class: "new-in-folder" %>
+            </div>
+          </details>
+        <% end %>
+
+        <div class="collection-footer">
+          <%= link_to "＋ New request", new_api_request_path(collection_id: collection.id), class: "new-in-folder" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <p class="sidebar-empty">No collections yet. Create one to start saving requests.</p>
+<% end %>

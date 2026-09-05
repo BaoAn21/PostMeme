@@ -1,0 +1,13 @@
+<% content_for :title, "PostMeme" %>
+
+<% if notice %><div class="alert notice"><%= notice %></div><% end %>
+<% if alert %><div class="alert error"><%= alert %></div><% end %>
+
+<div class="empty-state">
+  <h2>Pick a request from the sidebar, or create one</h2>
+  <% if @collections.any? %>
+    <p>Choose an existing request, or click <em>＋ New request</em> under a collection.</p>
+  <% else %>
+    <p>Create your first collection to start saving requests — no account required.</p>
+  <% end %>
+</div>

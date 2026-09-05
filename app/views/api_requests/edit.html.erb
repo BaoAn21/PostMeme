@@ -1,0 +1,97 @@
+<!-- The request editor: also used for "new" requests (saved = false) -->
+<%= content_for :title, (@api_request.new_record? ? "New request" : @api_request.name) %>
+
+<%= form_with model: @api_request, url: (api_request_path(@api_request) if @api_request.persisted?),
+      data: { controller: "executor", action: "submit->executor#submit" } do |f| %>
+
+  <% if @api_request.errors.any? %>
+    <div class="alert error">
+      <% @api_request.errors.full_messages.each do |msg| %><div><%= msg %></div><% end %>
+    </div>
+  <% end %>
+
+  <%= f.hidden_field :collection_id %>
+  <%= f.hidden_field :folder_id %>
+
+  <div class="editor-header">
+    <%= f.text_field :name, placeholder: "Request name (optional)", class: "req-name-input", data: { executor_target: "name" } %>
+
+    <div class="send-row">
+      <%= f.select :method, ApiRequest::HTTP_METHODS, {}, class: "method-select" %>
+      <%= f.url_field :url, placeholder: "https://example.com/api", required: true, autofocus: true, class: "url-input", data: { executor_target: "url" } %>
+      <button type="submit" class="btn btn-send" data-executor-target="send">Send</button>
+      <button type="submit" name="commit" value="save" formaction="<%= @api_request.persisted? ? api_request_path(@api_request) : api_requests_path %>"
+              class="btn btn-save">Save</button>
+    </div>
+  </div>
+
+  <div class="tabs" data-controller="tabs">
+    <div class="tab-buttons" role="tablist">
+      <button type="button" class="tab-btn active" data-action="click->tabs#show" data-tab="params">Params</button>
+      <button type="button" class="tab-btn" data-action="click->tabs#show" data-tab="headers">Headers</button>
+      <button type="button" class="tab-btn" data-action="click->tabs#show" data-tab="body">Body</button>
+    </div>
+
+    <!-- Params -->
+    <div class="tab-panel" data-tab-panel="params">
+      <div class="nv-rows" data-controller="name-value-rows" data-name-value-rows-prefix-value="api_request[params]" data-name-value-rows-target="container">
+        <template data-name-value-rows-target="template">
+          <div class="nv-row" data-name-value-rows-target="row">
+            <input type="checkbox" name="api_request[params][][enabled]" value="1" checked>
+            <input type="text" name="api_request[params][][key]" placeholder="key" class="nv-key">
+            <input type="text" name="api_request[params][][value]" placeholder="value" class="nv-value">
+            <button type="button" class="nv-remove" data-action="click->name-value-rows#removeRow">✕</button>
+          </div>
+        </template>
+        <% @api_request.params.each do |row| %>
+          <div class="nv-row" data-name-value-rows-target="row">
+            <input type="checkbox" name="api_request[params][][enabled]" value="1" <%= "checked" if row["enabled"] %>>
+            <input type="text" name="api_request[params][][key]" value="<%= row["key"] %>" placeholder="key" class="nv-key">
+            <input type="text" name="api_request[params][][value]" value="<%= row["value"] %>" placeholder="value" class="nv-value">
+            <button type="button" class="nv-remove" data-action="click->name-value-rows#removeRow">✕</button>
+          </div>
+        <% end %>
+        <button type="button" class="nv-add" data-action="click->name-value-rows#addRow">＋ Add param</button>
+      </div>
+    </div>
+
+    <!-- Headers -->
+    <div class="tab-panel hidden" data-tab-panel="headers">
+      <div class="nv-rows" data-controller="name-value-rows" data-name-value-rows-prefix-value="api_request[headers]" data-name-value-rows-target="container">
+        <template data-name-value-rows-target="template">
+          <div class="nv-row" data-name-value-rows-target="row">
+            <input type="checkbox" name="api_request[headers][][enabled]" value="1" checked>
+            <input type="text" name="api_request[headers][][key]" placeholder="key" class="nv-key">
+            <input type="text" name="api_request[headers][][value]" placeholder="value" class="nv-value">
+            <button type="button" class="nv-remove" data-action="click->name-value-rows#removeRow">✕</button>
+          </div>
+        </template>
+        <% @api_request.headers.each do |row| %>
+          <div class="nv-row" data-name-value-rows-target="row">
+            <input type="checkbox" name="api_request[headers][][enabled]" value="1" <%= "checked" if row["enabled"] %>>
+            <input type="text" name="api_request[headers][][key]" value="<%= row["key"] %>" placeholder="key" class="nv-key">
+            <input type="text" name="api_request[headers][][value]" value="<%= row["value"] %>" placeholder="value" class="nv-value">
+            <button type="button" class="nv-remove" data-action="click->name-value-rows#removeRow">✕</button>
+          </div>
+        <% end %>
+        <button type="button" class="nv-add" data-action="click->name-value-rows#addRow">＋ Add header</button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="tab-panel hidden" data-tab-panel="body">
+      <textarea name="api_request[body]" class="body-input" placeholder='Raw body — e.g. {"key": "value"} (set Content-Type in Headers)' rows="12"><%= @api_request.body %></textarea>
+    </div>
+  </div>
+<% end %>
+
+<!-- Response pane, filled by the executor Stimulus controller -->
+<div class="response-pane" data-executor-target="response" hidden>
+  <div class="response-meta">
+    <span class="status-pill" data-executor-target="status"></span>
+    <span class="response-time-label" data-executor-target="time"></span>
+  </div>
+  <div class="response-error alert error" data-executor-target="error" hidden></div>
+  <div class="response-headers" data-executor-target="headers"></div>
+  <pre class="response-body" data-executor-target="body"></pre>
+</div>
