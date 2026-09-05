@@ -1,8 +1,9 @@
 <!-- The request editor: also used for "new" requests (saved = false) -->
 <%= content_for :title, (@api_request.new_record? ? "New request" : @api_request.name) %>
 
+<div data-controller="executor">
 <%= form_with model: @api_request, url: (api_request_path(@api_request) if @api_request.persisted?),
-      data: { controller: "executor", action: "submit->executor#submit" } do |f| %>
+      data: { action: "submit->executor#submit" } do |f| %>
 
   <% if @api_request.errors.any? %>
     <div class="alert error">
@@ -94,4 +95,5 @@
   <div class="response-error alert error" data-executor-target="error" hidden></div>
   <div class="response-headers" data-executor-target="headers"></div>
   <pre class="response-body" data-executor-target="body"></pre>
+</div>
 </div>

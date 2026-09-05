@@ -19,11 +19,15 @@ export default class extends Controller {
     btn.textContent = "Sending…"
 
     const token = document.querySelector('meta[name="csrf-token"]')?.content
+    const formData = new FormData(form)
+    // Rails' _method hidden field would remap /execute (a POST-only route) to PATCH → drop it.
+    formData.delete("_method")
+    formData.delete("authenticity_token") // we pass the token as a header instead
     try {
       const response = await fetch("/execute", {
         method: "POST",
         headers: { "X-CSRF-Token": token, "Accept": "application/json" },
-        body: new FormData(form)
+        body: formData
       })
       const data = await response.json()
       this.render(data)
