@@ -1,7 +1,7 @@
 <!-- The request editor: also used for "new" requests (saved = false) -->
 <%= content_for :title, (@api_request.new_record? ? "New request" : @api_request.name) %>
 
-<div data-controller="executor">
+<div data-controller="executor curl-import">
 <%= form_with model: @api_request, url: (api_request_path(@api_request) if @api_request.persisted?),
       data: { action: "submit->executor#submit" } do |f| %>
 
@@ -18,11 +18,20 @@
     <%= f.text_field :name, placeholder: "Request name (optional)", class: "req-name-input", data: { executor_target: "name" } %>
 
     <div class="send-row">
-      <%= f.select :method, ApiRequest::HTTP_METHODS, {}, class: "method-select" %>
-      <%= f.url_field :url, placeholder: "https://example.com/api", required: true, autofocus: true, class: "url-input", data: { executor_target: "url" } %>
+      <%= f.select :method, ApiRequest::HTTP_METHODS, {}, class: "method-select", data: { curl_import_target: "method" } %>
+      <%= f.url_field :url, placeholder: "https://example.com/api", required: true, autofocus: true, class: "url-input", data: { executor_target: "url", curl_import_target: "url" } %>
       <button type="submit" class="btn btn-send" data-executor-target="send">Send</button>
       <button type="submit" name="commit" value="save" formaction="<%= @api_request.persisted? ? api_request_path(@api_request) : api_requests_path %>"
               class="btn btn-save">Save</button>
+    </div>
+
+    <div class="curl-import">
+      <button type="button" class="btn-link" data-action="click->curl-import#toggle">⌘ Paste curl command</button>
+      <div class="curl-import-box hidden" data-curl-import-target="box">
+        <textarea data-curl-import-target="input" class="curl-import-input" rows="3"
+                  placeholder="curl https://api.example.com/users -H 'Authorization: Bearer ...' -d '{&quot;name&quot;:&quot;x&quot;}'"></textarea>
+        <button type="button" class="btn btn-save" data-action="click->curl-import#import">Import</button>
+      </div>
     </div>
   </div>
 
@@ -35,7 +44,7 @@
 
     <!-- Params -->
     <div class="tab-panel" data-tab-panel="params">
-      <div class="nv-rows" data-controller="name-value-rows" data-name-value-rows-prefix-value="api_request[params]" data-name-value-rows-target="container">
+      <div class="nv-rows" data-controller="name-value-rows" data-name-value-rows-prefix-value="api_request[params]" data-name-value-rows-target="container" data-curl-import-target="paramsRows">
         <template data-name-value-rows-target="template">
           <div class="nv-row" data-name-value-rows-target="row">
             <input type="checkbox" name="api_request[params][][enabled]" value="1" checked>
@@ -58,7 +67,7 @@
 
     <!-- Headers -->
     <div class="tab-panel hidden" data-tab-panel="headers">
-      <div class="nv-rows" data-controller="name-value-rows" data-name-value-rows-prefix-value="api_request[headers]" data-name-value-rows-target="container">
+      <div class="nv-rows" data-controller="name-value-rows" data-name-value-rows-prefix-value="api_request[headers]" data-name-value-rows-target="container" data-curl-import-target="headersRows">
         <template data-name-value-rows-target="template">
           <div class="nv-row" data-name-value-rows-target="row">
             <input type="checkbox" name="api_request[headers][][enabled]" value="1" checked>
@@ -81,7 +90,7 @@
 
     <!-- Body -->
     <div class="tab-panel hidden" data-tab-panel="body">
-      <textarea name="api_request[body]" class="body-input" placeholder='Raw body — e.g. {"key": "value"} (set Content-Type in Headers)' rows="12"><%= @api_request.body %></textarea>
+      <textarea name="api_request[body]" class="body-input" placeholder='Raw body — e.g. {"key": "value"} (set Content-Type in Headers)' rows="12" data-curl-import-target="body"><%= @api_request.body %></textarea>
     </div>
   </div>
 <% end %>
