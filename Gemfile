@@ -55,4 +55,4 @@ group :test do
 end
 
 # HTTP client for executing requests from the backend (avoids CORS)
-gem "httpx", "~> 1.4"
+gem "httpx", "~> 1.9"
